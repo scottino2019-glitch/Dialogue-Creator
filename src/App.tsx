@@ -102,9 +102,16 @@ export default function App() {
   };
 
   const saveSettings = () => {
-    localStorage.setItem('AI_API_KEY', aiApiKey);
+    const trimmedKey = aiApiKey.trim();
+    setAiApiKey(trimmedKey);
+    localStorage.setItem('AI_API_KEY', trimmedKey);
     localStorage.setItem('AI_INSTRUCTIONS', aiInstructions);
     setShowSettings(false);
+  };
+
+  const clearManualApiKey = () => {
+    setAiApiKey('');
+    localStorage.removeItem('AI_API_KEY');
   };
 
   const speak = (text: string) => {
@@ -717,7 +724,17 @@ export default function App() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-text-dim">Gemini API Key</label>
+                  <div className="flex items-center justify-between">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-text-dim">Gemini API Key</label>
+                    {aiApiKey && (
+                      <button 
+                        onClick={clearManualApiKey}
+                        className="text-[9px] font-bold text-rose-400 hover:text-rose-300 transition-colors uppercase tracking-widest"
+                      >
+                        Pulisci Manuale
+                      </button>
+                    )}
+                  </div>
                   <div className="relative">
                     <input 
                       type="password"
