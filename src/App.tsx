@@ -93,6 +93,14 @@ export default function App() {
     }
   };
 
+  // Helpers
+  const getApiKeyStatus = () => {
+    if (aiApiKey) return { text: 'Configurata Manualmente', color: 'text-blue-400' };
+    if (import.meta.env.VITE_GEMINI_API_KEY) return { text: 'Rilevata da Netlify', color: 'text-emerald-400' };
+    if (typeof process !== 'undefined' && process.env.GEMINI_API_KEY) return { text: 'Rilevata da AI Studio', color: 'text-amber-400' };
+    return { text: 'Nessuna Chiave Rilevata', color: 'text-rose-400' };
+  };
+
   const saveSettings = () => {
     localStorage.setItem('AI_API_KEY', aiApiKey);
     localStorage.setItem('AI_INSTRUCTIONS', aiInstructions);
@@ -700,6 +708,14 @@ export default function App() {
               </div>
 
               <div className="p-6 space-y-6">
+                <div className="flex items-center justify-between px-4 py-2 bg-slate-900/50 rounded-lg border border-border/50">
+                  <span className="text-[10px] font-bold uppercase text-text-dim">Stato Connessione</span>
+                  <div className="flex items-center gap-2">
+                    <div className={cn("w-1.5 h-1.5 rounded-full", getApiKeyStatus().color.replace('text', 'bg'))} />
+                    <span className={cn("text-[10px] font-bold uppercase", getApiKeyStatus().color)}>{getApiKeyStatus().text}</span>
+                  </div>
+                </div>
+
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold uppercase tracking-widest text-text-dim">Gemini API Key</label>
                   <div className="relative">
