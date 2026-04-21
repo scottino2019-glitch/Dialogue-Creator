@@ -167,6 +167,7 @@ export default function App() {
           background-color: #e5ddd5; 
           margin: 0; 
           padding: 20px;
+          min-height: 100vh;
           background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');
           background-repeat: repeat;
         }
@@ -220,10 +221,31 @@ export default function App() {
           color: white;
           padding: 10px 16px;
           border-radius: 8px 8px 0 0;
-          margin-bottom: 12px;
+          margin-bottom: 0px;
           display: flex;
           align-items: center;
           gap: 12px;
+        }
+        .mode-tabs {
+          background-color: #075e54;
+          display: flex;
+          padding: 0 16px 8px;
+          border-radius: 0 0 8px 8px;
+          margin-bottom: 12px;
+          gap: 10px;
+        }
+        .mode-tab {
+          font-size: 12px;
+          font-weight: 700;
+          text-transform: uppercase;
+          color: rgba(255,255,255,0.6);
+          padding: 4px 8px;
+          cursor: pointer;
+          border-bottom: 2px solid transparent;
+        }
+        .mode-tab.active {
+          color: white;
+          border-bottom-color: white;
         }
         .vocab-section {
           background: white;
@@ -244,6 +266,26 @@ export default function App() {
         .audio-btn:hover {
           color: #2563eb;
         }
+        .hidden { display: none; }
+        .quiz-card {
+          background: white;
+          border-radius: 12px;
+          padding: 24px;
+          box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+          text-align: center;
+        }
+        .option-btn {
+          width: 100%;
+          padding: 12px;
+          margin-top: 10px;
+          border: 1px solid #ddd;
+          border-radius: 8px;
+          background: #f8f9fa;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+        .option-btn:hover { background: #e9ecef; }
     </style>
 </head>
 <body>
@@ -252,63 +294,156 @@ export default function App() {
           <div style="width: 36px; height: 36px; border-radius: 50%; background: #128c7e; display: flex; align-items: center; justify-content: center; font-weight: bold;">AI</div>
           <div>
             <div style="font-weight: 700; font-size: 16px;">Polyglot: ${language}</div>
-            <div style="font-size: 11px; opacity: 0.8;">Online - Topic: ${topic || 'Dialogue'}</div>
+            <div style="font-size: 11px; opacity: 0.8;">Offline Mode</div>
+          </div>
+        </div>
+        <div class="mode-tabs">
+          <div id="tab-chat" class="mode-tab active" onclick="setMode('chat')">Chat</div>
+          <div id="tab-quiz" class="mode-tab" onclick="setMode('quiz')">Quiz</div>
+        </div>
+
+        <div id="chat-view">
+          ${entries.map(e => `
+              <div class="bubble ${e.side === 'left' ? 'bubble-left' : 'bubble-right'}">
+                  <div class="speaker-name">${e.speaker}</div>
+                  <div style="display: flex; align-items: flex-start; justify-content: space-between;">
+                    <div style="color: #000; font-weight: 500;">${e.text}</div>
+                    <button class="audio-btn" onclick="speak(\`${e.text.replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`)">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+                    </button>
+                  </div>
+                  ${e.pronunciation ? `<div class="pronunciation">${e.pronunciation}</div>` : ''}
+                  <div class="translation">${e.translation}</div>
+              </div>
+          `).join('')}
+          
+          <div class="vocab-section">
+            <h2 style="font-weight: 700; margin-bottom: 15px; color: #075e54;">Vocabulary Table</h2>
+            <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+              <thead style="background: #f0f2f5;">
+                <tr>
+                  <th style="padding: 8px; text-align: left; border-bottom: 2px solid #ddd;">${language}</th>
+                  <th style="padding: 8px; text-align: left; border-bottom: 2px solid #ddd;">Pronunciation</th>
+                  <th style="padding: 8px; text-align: left; border-bottom: 2px solid #ddd;">Italian</th>
+                  <th style="padding: 8px; text-align: center; border-bottom: 2px solid #ddd;">Audio</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${vocabulary.map(v => `
+                  <tr style="border-bottom: 1px solid #eee;">
+                    <td style="padding: 8px; font-weight: 600;">${v.word}</td>
+                    <td style="padding: 8px; color: #555; font-style: italic;">${v.pronunciation || '-'}</td>
+                    <td style="padding: 8px; color: #555;">${v.translation}</td>
+                    <td style="padding: 8px; text-align: center;">
+                      <button class="audio-btn" onclick="speak(\`${v.word.replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`)">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+                      </button>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
           </div>
         </div>
 
-        ${entries.map(e => `
-            <div class="bubble ${e.side === 'left' ? 'bubble-left' : 'bubble-right'}">
-                <div class="speaker-name">${e.speaker}</div>
-                <div style="display: flex; align-items: flex-start; justify-content: space-between;">
-                  <div style="color: #000; font-weight: 500;">${e.text}</div>
-                  <button class="audio-btn" onclick="speak(\`${e.text.replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`)">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
-                  </button>
-                </div>
-                ${e.pronunciation ? `<div class="pronunciation">${e.pronunciation}</div>` : ''}
-                <div class="translation">${e.translation}</div>
-            </div>
-        `).join('')}
-        
-        <div class="vocab-section">
-          <h2 style="font-weight: 700; margin-bottom: 15px; color: #075e54;">Vocabulary Table</h2>
-          <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
-            <thead style="background: #f0f2f5;">
-              <tr>
-                <th style="padding: 8px; text-align: left; border-bottom: 2px solid #ddd;">${language}</th>
-                <th style="padding: 8px; text-align: left; border-bottom: 2px solid #ddd;">Pronunciation</th>
-                <th style="padding: 8px; text-align: left; border-bottom: 2px solid #ddd;">Italian</th>
-                <th style="padding: 8px; text-align: center; border-bottom: 2px solid #ddd;">Audio</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${vocabulary.map(v => `
-                <tr style="border-bottom: 1px solid #eee;">
-                  <td style="padding: 8px; font-weight: 600;">${v.word}</td>
-                  <td style="padding: 8px; color: #555; font-style: italic;">${v.pronunciation || '-'}</td>
-                  <td style="padding: 8px; color: #555;">${v.translation}</td>
-                  <td style="padding: 8px; text-align: center;">
-                    <button class="audio-btn" onclick="speak(\`${v.word.replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`)">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
-                    </button>
-                  </td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
+        <div id="quiz-view" class="hidden">
+           <div class="quiz-card">
+              <div id="quiz-question-area">
+                <p id="quiz-prompt" style="font-size: 10px; font-weight: bold; color: #666; text-transform: uppercase;">Traduzione:</p>
+                <h3 id="quiz-question-text" style="font-size: 20px; font-weight: 700; margin-bottom: 20px;">-</h3>
+                <div id="quiz-options"></div>
+              </div>
+              <div id="quiz-feedback-area" class="hidden">
+                <div id="feedback-icon" style="margin-bottom: 15px;"></div>
+                <h3 id="feedback-title" style="font-size: 24px; font-weight: 800; margin-bottom: 10px;">-</h3>
+                <p id="feedback-text" style="font-size: 14px; margin-bottom: 20px;">-</p>
+                <button onclick="nextQuestion()" style="background: #3b82f6; color: white; padding: 10px 24px; border-radius: 24px; font-weight: bold; border: none; cursor: pointer;">Prossimo</button>
+              </div>
+           </div>
         </div>
     </div>
 
     <script>
+      const entries = ${JSON.stringify(entries)};
+      let currentIndex = 0;
+      let score = 0;
+
       function speak(text) {
-        if (!window.speechSynthesis) {
-          alert("Spiacenti, il tuo browser non supporta la sintesi vocale.");
-          return;
-        }
+        if (!window.speechSynthesis) return;
         const speech = new SpeechSynthesisUtterance(text);
         speech.lang = "${langCode}";
-        window.speechSynthesis.cancel(); // Stop any current speech
+        window.speechSynthesis.cancel();
         window.speechSynthesis.speak(speech);
+      }
+
+      function setMode(mode) {
+        document.getElementById('chat-view').classList.toggle('hidden', mode !== 'chat');
+        document.getElementById('quiz-view').classList.toggle('hidden', mode !== 'quiz');
+        document.getElementById('tab-chat').classList.toggle('active', mode === 'chat');
+        document.getElementById('tab-quiz').classList.toggle('active', mode === 'quiz');
+        if (mode === 'quiz') startQuiz();
+      }
+
+      function startQuiz() {
+        currentIndex = 0;
+        score = 0;
+        showQuestion();
+      }
+
+      function showQuestion() {
+        const question = entries[currentIndex];
+        document.getElementById('quiz-question-text').innerText = '"' + question.translation + '"';
+        document.getElementById('quiz-feedback-area').classList.add('hidden');
+        document.getElementById('quiz-question-area').classList.remove('hidden');
+        
+        const optionsArea = document.getElementById('quiz-options');
+        optionsArea.innerHTML = '';
+        
+        const options = [question.text];
+        while(options.length < 3 && entries.length > 1) {
+          const randIdx = Math.floor(Math.random() * entries.length);
+          const randText = entries[randIdx].text;
+          if(!options.includes(randText)) options.push(randText);
+        }
+        options.sort(() => Math.random() - 0.5);
+        
+        options.forEach(opt => {
+          const btn = document.createElement('button');
+          btn.className = 'option-btn';
+          btn.innerText = opt;
+          btn.onclick = () => checkAnswer(opt);
+          optionsArea.appendChild(btn);
+        });
+      }
+
+      function checkAnswer(answer) {
+        const correct = entries[currentIndex].text;
+        const isCorrect = answer === correct;
+        if(isCorrect) score++;
+        
+        document.getElementById('quiz-question-area').classList.add('hidden');
+        document.getElementById('quiz-feedback-area').classList.remove('hidden');
+        
+        const title = document.getElementById('feedback-title');
+        const text = document.getElementById('feedback-text');
+        const icon = document.getElementById('feedback-icon');
+        
+        if(isCorrect) {
+          title.innerText = 'CORRETTO!';
+          title.style.color = '#10b981';
+          text.innerText = 'Ottimo lavoro.';
+          icon.innerHTML = '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+        } else {
+          title.innerText = 'SBAGLIATO';
+          title.style.color = '#f43f5e';
+          text.innerHTML = 'La risposta era: <b style="color: black">' + correct + '</b>';
+          icon.innerHTML = '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" stroke-width="3"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>';
+        }
+      }
+
+      function nextQuestion() {
+        currentIndex = (currentIndex + 1) % entries.length;
+        showQuestion();
       }
     </script>
 </body>
